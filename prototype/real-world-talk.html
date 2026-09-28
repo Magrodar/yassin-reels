@@ -1,0 +1,919 @@
+<title>Real World Talk</title>
+<meta name="theme-color" content="#0F1714">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=El+Messiri:wght@600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#EDF1EE; --surface:#FFFFFF; --surface-2:#F5F8F6; --ink:#17221E; --muted:#5B6A63; --line:#D3DCD7;
+  --accent:#2E6A58; --accent-ink:#FFFFFF; --turn:#E2A03A; --ack:#86B39A; --warn:#B4533C; --ok:#2E7D5B;
+  --stage:#0F1714; --stage-2:#17231F; --stage-ink:#F1F5F3; --stage-muted:#9DB0A7;
+  --ui:"IBM Plex Sans Arabic", "Noto Sans Arabic", Tahoma, system-ui, sans-serif;
+  --display:"El Messiri", "IBM Plex Sans Arabic", Tahoma, serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0E1512; --surface:#16201C; --surface-2:#1B2722; --ink:#E6EEEA; --muted:#9AAAA2; --line:#2A3832;
+    --accent:#6FB39C; --accent-ink:#0E1512; --warn:#E08A72; --ok:#7CC6A2;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0E1512; --surface:#16201C; --surface-2:#1B2722; --ink:#E6EEEA; --muted:#9AAAA2; --line:#2A3832;
+  --accent:#6FB39C; --accent-ink:#0E1512; --warn:#E08A72; --ok:#7CC6A2;
+}
+html,body{height:100%}
+body{background:var(--bg); color:var(--ink); font-family:var(--ui); font-size:15px; line-height:1.6; overscroll-behavior:none; -webkit-tap-highlight-color:transparent}
+button,input,select{font:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--turn); outline-offset:2px}
+@media (prefers-reduced-motion: reduce){ *{animation:none!important; transition:none!important} }
+
+/* ---------- Child screens (single dark look, on purpose) ---------- */
+.child{position:fixed; inset:0; background:var(--stage); color:var(--stage-ink); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:28px;
+  padding:calc(env(safe-area-inset-top,0px) + 16px) 16px calc(env(safe-area-inset-bottom,0px) + 16px); text-align:center; user-select:none; -webkit-user-select:none}
+.parent-link{position:absolute; top:calc(env(safe-area-inset-top,0px) + 10px); inset-inline-start:12px; background:none; border:1px solid #33443D; color:var(--stage-muted); border-radius:999px; padding:4px 12px; font-size:12px}
+.avatar{width:min(52vw,220px); aspect-ratio:1; border-radius:50%; background:var(--stage-2); border:4px solid #2B3B35; display:grid; place-items:center; overflow:hidden; font-family:var(--display); font-size:min(24vw,96px); color:var(--stage-ink)}
+.avatar img{width:100%; height:100%; object-fit:cover}
+.child-name{font-family:var(--display); font-size:clamp(34px,10vw,52px); line-height:1.2; margin:0}
+.start-btn{background:var(--turn); color:#1B1407; border:0; border-radius:999px; font-family:var(--display); font-size:clamp(34px,11vw,48px); padding:14px 64px; box-shadow:0 10px 30px rgba(226,160,58,.25)}
+.adult-note{font-size:13px; color:var(--stage-muted); max-width:34ch}
+.rest{font-family:var(--display); font-size:28px; color:var(--stage-ink)}
+
+.coview h2{font-family:var(--display); font-size:26px; margin:0}
+.coview ol{text-align:start; max-width:34ch; margin:0; padding-inline-start:22px; color:var(--stage-ink); font-size:17px; display:grid; gap:8px}
+.coview .go{background:var(--stage-ink); color:var(--stage); border:0; border-radius:14px; padding:14px 26px; font-size:18px; font-weight:600}
+
+/* Player */
+#player{padding:0; gap:0; justify-content:stretch; touch-action:none}
+#progress{position:absolute; top:env(safe-area-inset-top,0px); inset-inline:0; height:5px; background:#22312B; z-index:5}
+#progress i{display:block; height:100%; width:0; background:var(--stage-muted); transition:width .4s}
+#exit{position:absolute; top:calc(env(safe-area-inset-top,0px) + 14px); inset-inline-end:12px; z-index:6; width:44px; height:44px; border-radius:50%; border:0; background:rgba(255,255,255,.08); overflow:hidden; color:var(--stage-muted); font-size:11px}
+#exit b{position:absolute; inset:auto 0 0 0; height:0; background:rgba(255,255,255,.35)}
+#exit.holding b{height:100%; transition:height 2s linear}
+#stage{position:absolute; inset:0; display:grid; overflow:hidden}
+#stage video{width:100%; height:100%; object-fit:cover; background:#000}
+.ph{margin:auto; width:min(86vw,440px); aspect-ratio:9/12; max-height:62vh; border:2px dashed #3A4C45; border-radius:18px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:20px; color:var(--stage-muted)}
+.ph .tag{font-size:12px; letter-spacing:.04em; border:1px solid #3A4C45; border-radius:999px; padding:2px 10px}
+.ph p{margin:0; font-size:16px; color:#C9D6D0; max-width:28ch}
+.ph small{font-size:12px}
+.opts{display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:70px 12px 190px; height:100%}
+.opt{border-radius:18px; background:var(--stage-2); border:3px solid transparent; overflow:hidden; display:grid; place-items:center; font-family:var(--display); font-size:clamp(22px,7vw,34px); color:var(--stage-ink); transition:border-color .2s, opacity .3s}
+.opt img{width:100%; height:100%; object-fit:cover}
+.opt.sel{border-color:var(--ack)}
+.opt.dim{opacity:.35}
+.opt.hint{border-color:var(--turn)}
+#turnglow{position:absolute; inset:0; pointer-events:none; box-shadow:inset 0 0 0 0 rgba(226,160,58,0); transition:box-shadow .4s}
+#player.turn #turnglow{box-shadow:inset 0 0 0 10px rgba(226,160,58,.55)}
+#cue{position:absolute; left:50%; bottom:calc(env(safe-area-inset-bottom,0px) + 150px); transform:translateX(-50%) scale(.6); width:128px; height:128px; opacity:0; transition:opacity .3s, transform .3s; pointer-events:none}
+#player.turn #cue{opacity:1; transform:translateX(-50%) scale(1)}
+#cue .face{position:absolute; inset:12px; border-radius:50%; overflow:hidden; background:var(--stage-2); display:grid; place-items:center; font-family:var(--display); font-size:44px}
+#cue .face img{width:100%; height:100%; object-fit:cover}
+#cue svg{position:absolute; inset:0; transform:rotate(-90deg)}
+#cue circle{fill:none; stroke-width:8}
+#cue .track{stroke:rgba(255,255,255,.12)}
+#cue .ring{stroke:var(--turn); stroke-linecap:round}
+#cue.ack .ring{stroke:var(--ack)}
+#cue.held .ring{stroke:var(--stage-muted)}
+#cap{position:absolute; inset-inline:0; bottom:0; padding:28px 16px calc(env(safe-area-inset-bottom,0px) + 22px); background:linear-gradient(to top, rgba(8,12,10,.92) 55%, rgba(8,12,10,0)); text-align:center; pointer-events:none}
+#cap-main{font-family:var(--display); font-size:clamp(28px,8.5vw,40px); line-height:1.3; min-height:1.3em; margin:0}
+#cap-main.expect{color:var(--turn)}
+#cap-sub{font-size:13px; color:var(--stage-muted); min-height:1.4em; margin:4px 0 0}
+.nov{display:inline-block; font-size:11px; border:1px solid #4A5D55; color:var(--stage-muted); border-radius:999px; padding:0 8px; margin-inline-start:6px; vertical-align:middle}
+#next-hint{position:absolute; left:50%; transform:translateX(-50%); bottom:calc(env(safe-area-inset-bottom,0px) + 118px); color:var(--stage-muted); font-size:13px; opacity:0; transition:opacity .4s; pointer-events:none; display:flex; flex-direction:column; align-items:center}
+#player.done #next-hint{opacity:1}
+#next-hint svg{animation:nudge 1.8s ease-in-out infinite}
+@keyframes nudge{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+.end h2{font-family:var(--display); font-size:34px; margin:0}
+.end .card{background:var(--stage-2); border-radius:16px; padding:16px 18px; max-width:420px; width:100%; text-align:start}
+.end .card h3{margin:0 0 6px; font-size:14px; color:var(--stage-muted); font-weight:500}
+.end .card ul{margin:0; padding-inline-start:20px; font-family:var(--display); font-size:22px}
+.end .card p{margin:0; font-size:16px}
+.end .home{background:none; border:1px solid #3A4C45; color:var(--stage-ink); border-radius:12px; padding:10px 22px}
+
+/* Gate */
+.gate h2{font-family:var(--display); font-size:24px; margin:0}
+.gate .word{font-family:var(--display); font-size:40px; color:var(--turn)}
+.keys{display:grid; grid-template-columns:repeat(3,72px); gap:10px}
+.keys button{height:64px; border-radius:14px; border:1px solid #33443D; background:var(--stage-2); color:var(--stage-ink); font-size:26px}
+.gate .back{background:none; border:0; color:var(--stage-muted); text-decoration:underline}
+
+/* ---------- Parent mode ---------- */
+#parent{max-width:760px; margin:0 auto; padding-block:12px 60px; padding-inline:16px}
+.p-head{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap}
+.p-head h1{font-family:var(--display); font-size:24px; margin:0}
+.btn{display:inline-flex; align-items:center; justify-content:center; gap:6px; border:1px solid var(--line); background:var(--surface); color:var(--ink); border-radius:10px; padding:7px 14px; font-weight:500; font-size:14px; white-space:nowrap}
+.btn.primary{background:var(--accent); border-color:var(--accent); color:var(--accent-ink)}
+.btn.small{padding:4px 10px; font-size:13px}
+.btn.danger{color:var(--warn); border-color:var(--warn)}
+.btn[disabled]{opacity:.45; cursor:default}
+.tabs{display:flex; gap:4px; overflow-x:auto; margin:14px 0 16px; border-bottom:1px solid var(--line)}
+.tabs button{background:none; border:0; border-bottom:3px solid transparent; padding:8px 12px; color:var(--muted); white-space:nowrap; font-weight:500}
+.tabs button[aria-selected="true"]{color:var(--ink); border-bottom-color:var(--accent)}
+.panel{display:grid; gap:14px}
+.box{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:14px 16px}
+.box h2{font-size:17px; margin:0 0 4px}
+.box h3{font-size:15px; margin:0}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.field{display:grid; gap:4px}
+.field label{font-weight:600; font-size:14px}
+.grid2{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px}
+input[type=text],select{border:1px solid var(--line); background:var(--surface-2); color:var(--ink); border-radius:10px; padding:8px 10px; width:100%}
+.seg{display:flex; flex-wrap:wrap; gap:6px}
+.seg button{border:1px solid var(--line); background:var(--surface-2); color:var(--ink); border-radius:999px; padding:5px 14px}
+.seg button[aria-pressed="true"]{background:var(--accent); border-color:var(--accent); color:var(--accent-ink)}
+.chips{display:flex; flex-wrap:wrap; gap:6px}
+.chip{border:1px solid var(--line); background:var(--surface-2); border-radius:999px; padding:3px 12px; font-size:14px}
+.chip[aria-pressed="true"]{border-color:var(--accent); color:var(--accent); font-weight:600}
+.pill{display:inline-block; font-size:12px; border-radius:999px; padding:1px 9px; border:1px solid var(--line); color:var(--muted); white-space:nowrap}
+.pill.ok{border-color:var(--ok); color:var(--ok)}
+.pill.miss{border-color:var(--warn); color:var(--warn)}
+details.lad{background:var(--surface); border:1px solid var(--line); border-radius:14px}
+details.lad>summary{list-style:none; padding:12px 16px; display:flex; align-items:center; justify-content:space-between; gap:10px; cursor:pointer}
+details.lad>summary::-webkit-details-marker{display:none}
+details.lad[open]>summary{border-bottom:1px solid var(--line)}
+.lad-body{padding:12px 16px; display:grid; gap:14px}
+.lad-title{display:flex; gap:10px; align-items:baseline; flex-wrap:wrap}
+.lad-title code{font-size:12px; color:var(--muted)}
+.lad-title b{font-family:var(--display); font-size:18px; font-weight:600}
+.rows{display:grid; gap:6px}
+.row{display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:8px 10px; border-radius:10px; background:var(--surface-2)}
+.row .txt{flex:1 1 160px; font-size:16px}
+.row .k{font-size:11px; color:var(--muted); min-width:26px}
+.acts{display:flex; gap:6px; flex-wrap:wrap}
+.acts input{display:none}
+.msg{font-size:13px; padding:6px 10px; border-radius:8px; background:var(--surface-2)}
+.msg.bad{color:var(--warn)}
+.msg.good{color:var(--ok)}
+.stat{display:flex; align-items:baseline; gap:10px}
+.stat b{font-family:var(--display); font-size:40px; line-height:1; font-variant-numeric:tabular-nums}
+.tips{margin:0; padding-inline-start:22px; display:grid; gap:10px}
+.tips b{display:block}
+.modal{position:fixed; inset:0; background:rgba(0,0,0,.7); display:grid; place-items:center; padding:16px; z-index:50}
+.modal video,.modal img{max-width:100%; max-height:75vh; border-radius:12px; background:#000}
+.modal .btn{margin-top:10px}
+.home-row{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:6px 0; border-top:1px solid var(--line)}
+.home-row:first-of-type{border-top:0}
+.home-row span{font-size:16px}
+.proto{border-style:dashed}
+</style>
+
+<div id="app" dir="rtl" lang="ar-EG">
+
+  <!-- 1. Start screen (child) -->
+  <section id="scr-start" class="child" aria-label="شاشة البداية">
+    <button class="parent-link" id="to-gate" type="button">للأهل</button>
+    <div class="avatar" id="start-avatar"></div>
+    <h1 class="child-name" id="start-name"></h1>
+    <button class="start-btn" id="start-btn" type="button">ابدأ</button>
+    <p class="rest" id="start-rest" hidden>كفاية كده النهارده. نكمّل بكرة.</p>
+    <p class="adult-note" id="start-note" hidden>للأهل: اكتبوا اسم الطفل وسجّلوا الصوت من «للأهل» فوق. من غير تسجيل، الجمل هتظهر مكتوبة بس.</p>
+  </section>
+
+  <!-- 2. Co-view screen (for the adult) -->
+  <section id="scr-coview" class="child coview" hidden aria-label="قبل ما نبدأ">
+    <h2>قبل ما نبدأ</h2>
+    <ol>
+      <li id="cv-sit">اقعد جنبه.</li>
+      <li>لما الدايرة تظهر، ده دوره. استنى وما تتكلمش.</li>
+      <li>بعد ما يحاول، قول الجملة تاني بهدوء. من غير تصحيح.</li>
+      <li>بعد ما الـ clip يخلص، اسحب لفوق عشان اللي بعده.</li>
+    </ol>
+    <button class="go" id="cv-go" type="button">أنا قاعد جنبه، يلا</button>
+  </section>
+
+  <!-- 3. Player -->
+  <section id="player" class="child" hidden aria-label="الجلسة">
+    <div id="stage"></div>
+    <div id="turnglow"></div>
+    <div id="progress"><i></i></div>
+    <button id="exit" type="button" aria-label="اضغط مطوّل ثانيتين للخروج"><b></b>خروج</button>
+    <div id="cue" aria-hidden="true">
+      <svg viewBox="0 0 128 128"><circle class="track" cx="64" cy="64" r="58"/><circle class="ring" cx="64" cy="64" r="58" stroke-dasharray="364.4" stroke-dashoffset="0"/></svg>
+      <div class="face"></div>
+    </div>
+    <div id="next-hint" aria-hidden="true">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg>
+      <span>اسحب لفوق</span>
+    </div>
+    <div id="cap"><p id="cap-main"></p><p id="cap-sub"></p></div>
+  </section>
+
+  <!-- 4. End screen -->
+  <section id="scr-end" class="child end" hidden aria-label="نهاية الجلسة">
+    <div class="avatar" id="end-avatar" style="width:120px"></div>
+    <h2>خلصنا.</h2>
+    <div class="card"><h3>قولوا الجمل دي النهارده في البيت</h3><ul id="end-lines"></ul></div>
+    <div class="card"><h3>نشاط النهارده من غير شاشة</h3><p id="end-act"></p></div>
+    <button class="home" id="end-home" type="button">رجوع للبداية</button>
+  </section>
+
+  <!-- 5. Parent gate -->
+  <section id="scr-gate" class="child gate" hidden aria-label="بوابة الأهل">
+    <h2>للأهل بس</h2>
+    <div>اضغط على الرقم</div>
+    <div class="word" id="gate-word"></div>
+    <div class="keys" id="gate-keys"></div>
+    <button class="back" id="gate-back" type="button">رجوع</button>
+  </section>
+
+  <!-- 6. Parent mode -->
+  <section id="parent" hidden aria-label="وضع الأهل">
+    <div class="p-head">
+      <h1>وضع الأهل</h1>
+      <button class="btn primary" id="p-exit" type="button">رجوع لشاشة الطفل</button>
+    </div>
+    <div class="tabs" role="tablist" id="tabs">
+      <button role="tab" data-tab="setup" aria-selected="true">الإعدادات</button>
+      <button role="tab" data-tab="studio" aria-selected="false">استوديو التسجيل</button>
+      <button role="tab" data-tab="progress" aria-selected="false">التقدم</button>
+      <button role="tab" data-tab="tips" aria-selected="false">نصايح</button>
+      <button role="tab" data-tab="privacy" aria-selected="false">الخصوصية</button>
+    </div>
+    <div id="p-body"></div>
+  </section>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* ================= Content: the 10 pilot ladders (docs B + C) =================
+   A value is either a string (same for boy and girl) or [boy, girl]. */
+const G = {id:'G', name:'جمل عامة', t:{SAY:['قول:','قولي:']}};
+const LADDERS = [
+ {id:'R01', t:{L1:'مية', L2:['عايز مية','عايزة مية'], L3:['أنا عايز مية','أنا عايزة مية'], L4:['أنا عايز مية ساقعة','أنا عايزة مية ساقعة'],
+   CQ:['عايز تشرب إيه؟ مية ولا لبن؟','عايزة تشربي إيه؟ مية ولا لبن؟'], B1:'لبن', B2:['عايز لبن','عايزة لبن'], B3:['أنا عايز لبن','أنا عايزة لبن'], B4:['أنا عايز لبن سخن','أنا عايزة لبن سخن']},
+  act:'وقت الأكل، امسك كوباية المية واستنى ٥ ثواني قبل ما تديهاله. لو قال «مية»، قول «عايز مية» وبعدين اديهاله.',
+  clips:[{id:'R01-01',type:'MODEL',scene:'إيد بتصب مية من إزازة في كوباية، والكوباية بتقرّب للكاميرا.'},
+         {id:'R01-02',type:'IMITATE',scene:'وش ست قريب، ماسكة كوباية مية جنب خدها وبتبص للكاميرا.'},
+         {id:'R01-05',type:'CHOOSE',scene:'صورتين جنب بعض: كوباية مية وكوباية لبن.',opts:['مية','لبن']}]},
+ {id:'R02', t:{L1:'كمان', L2:'بسكوت كمان', L3:['عايز بسكوت كمان','عايزة بسكوت كمان'], L4:['أنا عايز بسكوت كمان','أنا عايزة بسكوت كمان'], Q:['البسكوت خلص… عايز إيه؟','البسكوت خلص… عايزة إيه؟']},
+  act:'اديله حتة بسكوت صغيرة واحدة بس. لما تخلص، استنى. خليه يطلب «كمان» قبل الحتة الجاية.',
+  clips:[{id:'R02-01',type:'MODEL',scene:'طبق فيه بسكوتة واحدة، إيد صغيرة بتاخدها، الطبق يفضى، وإيد كبيرة تحط واحدة كمان.'},
+         {id:'R02-02',type:'ANSWER',scene:'طبق فاضي فيه فتافيت، وإيد ماسكة كيس البسكوت فوقه.'},
+         {id:'R02-03',type:'ADD',scene:'إيد بتحط بسكوت في الطبق واحدة واحدة.'}]},
+ {id:'R03', t:{L1:'لأ', L2:['مش عايز','مش عايزة'], L3:['مش عايز شوربة','مش عايزة شوربة'], L4:['أنا مش عايز شوربة','أنا مش عايزة شوربة'], Q:['عايز شوربة؟','عايزة شوربة؟']},
+  act:'اعرض عليه حاجة إنت عارف إنه مش بيحبها. لما يزق أو يعيط، قول «مش عايز» بهدوء واحترم رفضه.',
+  clips:[{id:'R03-01',type:'MODEL',scene:'معلقة شوربة جاية ناحية الكاميرا، وإيد صغيرة بتزقها بهدوء.'},
+         {id:'R03-02',type:'IMITATE',scene:'وش ست بتهز راسها بهدوء وإيدها مرفوعة كأنها بتقول «لأ».'},
+         {id:'R03-03',type:'ANSWER',scene:'طبق شوربة معروض قدام الكاميرا.'}]},
+ {id:'R06', t:{L1:'افتح', L2:'افتح العلبة', L3:'بابا، افتح العلبة', L4:'بابا، افتح العلبة دي'},
+  act:'حط لعبة بيحبها جوه علبة شفافة مقفولة وسيبها قدامه. استنى. لما يجيبهالك، قول «افتح» وافتحها.',
+  clips:[{id:'R06-01',type:'MODEL',scene:'إيدين صغيرين بيحاولوا يفتحوا علبة شفافة فيها عربية، ويدّوها لبابا فيفتحها.'},
+         {id:'R06-02',type:'IMITATE',scene:'وش راجل قريب، ماسك العلبة جنب وشه.'},
+         {id:'R06-03',type:'TEMPT',scene:'إيدين صغيرين بيهزوا العلبة المقفولة والعربية بتخبط جواها. محدش بيساعد لسه.'}]},
+ {id:'R07', t:{L1:'هات', L2:'هات الكورة', L3:'بابا، هات الكورة', L4:'بابا، هات الكورة الحمرا',
+   CQ:['عايز إيه؟ الكورة ولا العربية؟','عايزة إيه؟ الكورة ولا العربية؟'], B1:'هات', B2:'هات العربية', B3:'بابا، هات العربية', B4:'بابا، هات العربية الزرقا'},
+  act:'امسك الكورة في إيدك وإنت قاعد قصاده واستنى. لما يمد إيده، قول «هات الكورة» وارميهاله.',
+  clips:[{id:'R07-01',type:'MODEL',scene:'الكورة الحمرا فوق الرف، إيد صغيرة مش طايلة، وبابا ينزّلها ويزقها للكاميرا.'},
+         {id:'R07-02',type:'TEMPT',scene:'بابا قاعد ع الأرض والكورة على رجله، ساكت ومستني.'},
+         {id:'R07-03',type:'CHOOSE',scene:'صورتين جنب بعض: كورة حمرا وعربية زرقا.',opts:['الكورة','العربية']}]},
+ {id:'E01', t:{L1:'خلص', L2:'العصير خلص', L3:'العصير خلص كله', L4:'أنا شربت العصير كله',
+   S1:'خـ…', S2:'العصير…', S3:'العصير خلص…', S4:'أنا شربت العصير…', N1:'ده عصير.', N2:'بنشرب العصير.', N3:'خلاص!', Q:'العصير فين؟'},
+  act:'لما يخلص أي حاجة، أكل أو شرب، قول «خلص» وإنت بتقلب الكوباية قدامه.',
+  clips:[{id:'E01-01',type:'MODEL',scene:'كوباية عصير فيها شفاطة، العصير بيخلص لحد ما الكوباية تفضى.'},
+         {id:'E01-02',type:'COMPLETE',scene:'آخر نقط العصير، والشفاطة بتشفط هوا.'},
+         {id:'E01-03',type:'STORY',scene:'٤ لقطات: بنصب العصير، بنشربه، الكوباية الفاضية، إيد بتقلبها.'}]},
+ {id:'A01', t:{L1:'بياكل', L2:'الولد بياكل', L3:'الولد بياكل موزة', L4:'الولد بياكل موزة كبيرة',
+   S1:'بيا…', S2:'الولد…', S3:'الولد بياكل…', S4:'الولد بياكل موزة…', Q:'الولد بيعمل إيه؟'},
+  act:'وإنتم بتاكلوا، اوصف اللي بيحصل بجملة قصيرة: «بابا بياكل»، «تيتة بتاكل».',
+  clips:[{id:'A01-01',type:'MODEL',scene:'ولد قاعد ع الترابيزة بيقشر موزة كبيرة وبياكل منها.'},
+         {id:'A01-02',type:'COMPLETE',scene:'لقطة قريبة للولد وهو بيمضغ.'},
+         {id:'A01-03',type:'ANSWER',scene:'الولد بياكل الموزة، لقطة متوسطة.'}]},
+ {id:'A02', t:{L1:'بتشرب', L2:'البنت بتشرب', L3:'البنت بتشرب لبن', L4:'البنت بتشرب لبن بالكوباية', Q:'البنت بتعمل إيه؟', FQ:'مين بيشرب؟', FA:'أهي! البنت بتشرب.'},
+  act:'لما حد في البيت يشرب، اوصفه بجملة قصيرة: «ماما بتشرب شاي».',
+  clips:[{id:'A02-01',type:'MODEL',scene:'بنت بتشرب لبن من كوباية شفافة، وبيفضل شنب لبن.'},
+         {id:'A02-02',type:'ANSWER',scene:'البنت بتشرب ببطء، لقطة متوسطة.'},
+         {id:'A02-03',type:'FIND',scene:'صورتين: البنت بتشرب، والولد بياكل.',opts:['البنت بتشرب','الولد بياكل'],correct:0}]},
+ {id:'E02', t:{L1:'وقعت', L2:'الكورة وقعت', L3:'الكورة وقعت تحت', L4:'الكورة وقعت تحت الترابيزة',
+   S1:'وقـ…', S2:'الكورة…', S3:'الكورة وقعت…', S4:'الكورة وقعت تحت…'},
+  act:'العبوا بالكورة ع الترابيزة وسيبها تقع. قبل ما تقول حاجة، بص له واستنى.',
+  clips:[{id:'E02-01',type:'MODEL',scene:'كورة بتتدحرج لطرف الترابيزة، بتقع، بتنط، وتقف تحت الترابيزة.'},
+         {id:'E02-02',type:'COMPLETE',scene:'نفس الوقعة من قريب.'},
+         {id:'E02-04',type:'ADD',scene:'الوقعة بالتصوير البطيء.'}]},
+ {id:'Q02', t:{L1:'فين؟', L2:'فين الكورة؟', L3:'الكورة راحت فين؟', L4:'ماما، الكورة راحت فين؟', FQ:'فين الكورة؟', FA:'أهي! تحت الكرسي.'},
+  act:'خبّي الكورة تحت مخدة وهو شايفك، وقول «فين الكورة؟» بصوت مستغرب. استنى قبل ما تشيل المخدة.',
+  clips:[{id:'Q02-01',type:'MODEL',scene:'إيدين صغيرين بيرفعوا مخدة (مفيش حاجة)، وبعدين الستارة، والكورة طلعت تحت الكرسي.'},
+         {id:'Q02-02',type:'IMITATE',scene:'وش ست مستغربة، إيديها مفتوحة كأنها بتقول «فين؟».'},
+         {id:'Q02-03',type:'FIND',scene:'صورتين: الكورة تحت الكرسي، والكرسي فاضي.',opts:['الكورة تحت الكرسي','الكرسي فاضي'],correct:0}]},
+];
+const TYPE_AR = {MODEL:'اتفرّج',IMITATE:'قلّد',COMPLETE:'كمّل',ANSWER:'جاوب',ADD:'زوّد كلمة',TEMPT:'اطلب',CHOOSE:'اختار',FIND:'دوّر',STORY:'حكاية'};
+const INTERACTIVE = ['CHOOSE','FIND','TEMPT'];
+const ORDER = ['L1','L2','L3','L4','Q','CQ','B1','B2','B3','B4','S1','S2','S3','S4','FQ','FA','N1','N2','N3'];
+const KEY_AR = {Q:'سؤال',CQ:'سؤال',FQ:'سؤال',FA:'رد',N1:'حكاية ١',N2:'حكاية ٢',N3:'حكاية ٣',SAY:'قول'};
+const NUMS = ['واحد','اتنين','تلاتة','أربعة','خمسة','ستة','سبعة','تمانية','تسعة'];
+const AR_DIG = n => String(n).replace(/\d/g,d=>'٠١٢٣٤٥٦٧٨٩'[d]);
+const DAY = 864e5;
+const byId = id => id==='G' ? G : LADDERS.find(l=>l.id===id);
+const clipLadder = c => LADDERS.find(l=>l.clips.includes(c));
+
+/* ================= Storage (on this phone only) ================= */
+const store = {
+  get(k,d){ try{ const v=localStorage.getItem('rwt:'+k); return v==null?d:JSON.parse(v); }catch(e){ return d; } },
+  set(k,v){ try{ localStorage.setItem('rwt:'+k, JSON.stringify(v)); }catch(e){} }
+};
+const blobs = (function(){
+  const mem = new Map(); let dbp = null;
+  function open(){ if(dbp) return dbp; dbp = new Promise(res=>{ try{ const r=indexedDB.open('rwt',1); r.onupgradeneeded=()=>r.result.createObjectStore('b'); r.onsuccess=()=>res(r.result); r.onerror=()=>res(null); }catch(e){ res(null); } }); return dbp; }
+  function tx(mode, fn){ return open().then(db=>new Promise(res=>{ if(!db) return res(null); try{ const t=db.transaction('b',mode); const q=fn(t.objectStore('b')); t.oncomplete=()=>res(q&&q.result); t.onerror=()=>res(null); }catch(e){ res(null); } })); }
+  return {
+    async put(id,b){ mem.set(id,b); await tx('readwrite', s=>s.put(b,id)); },
+    async get(id){ if(!id) return null; if(mem.has(id)) return mem.get(id); const b = await tx('readonly', s=>s.get(id)); if(b) mem.set(id,b); return b||null; },
+    async del(id){ mem.delete(id); await tx('readwrite', s=>s.delete(id)); },
+    async clear(){ mem.clear(); await tx('readwrite', s=>s.clear()); }
+  };
+})();
+
+const DEFAULTS = {name:'', gender:'m', level:2, perSession:12, perDay:2, pauseAdj:0, goal:['R01','R02','R07'], active:LADDERS.map(l=>l.id), photo:null};
+let S = Object.assign({}, DEFAULTS, store.get('settings', {}));
+let voice = store.get('voice', {});   // "R01:L2" -> {b: blobId, s, e, g}
+let media = store.get('media', {});   // "vid:R01-01" | "img:R01-05:0" | "photo" -> blobId
+let sched = store.get('sched', {});   // ladderId -> {stage, due, seen, rep, clips:{clipId:time}}
+let log = store.get('log', {days:{}, plays:[], home:{}});
+const save = () => { store.set('settings',S); store.set('voice',voice); store.set('media',media); store.set('sched',sched); store.set('log',log); };
+const today = () => new Date().toISOString().slice(0,10);
+
+/* ================= Text helpers ================= */
+const gi = () => S.gender==='f' ? 1 : 0;
+const tx = v => Array.isArray(v) ? v[gi()] : (v||'');
+const isGendered = v => Array.isArray(v);
+const lineOf = (lid,k) => byId(lid).t[k];
+const esc = s => String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const pron = (m,f) => S.gender==='f' ? f : m;
+
+/* ================= Audio (Web Audio, segments) ================= */
+let AC = null;
+const bufCache = new Map();
+function ac(){ if(!AC){ try{ AC = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ AC=null; } } return AC; }
+async function decodeBlob(id){
+  if(bufCache.has(id)) return bufCache.get(id);
+  const b = await blobs.get(id); if(!b || !ac()) return null;
+  const ab = await b.arrayBuffer();
+  const buf = await new Promise((res,rej)=>{ const p = AC.decodeAudioData(ab, res, rej); if(p && p.then) p.then(res,rej); });
+  bufCache.set(id, buf); return buf;
+}
+function voiceEntry(lid,k){
+  const e = voice[lid+':'+k]; if(!e) return null;
+  if(isGendered(lineOf(lid,k)) && e.g!==S.gender) return null;
+  return e;
+}
+function detectSegments(buf){
+  const ch = buf.getChannelData(0), sr = buf.sampleRate, fl = Math.max(1,Math.round(sr*0.02)), n = Math.floor(ch.length/fl);
+  if(n<5) return [{s:0,e:buf.duration}];
+  const rms = new Float32Array(n);
+  for(let i=0;i<n;i++){ let s=0; for(let j=i*fl;j<(i+1)*fl;j++) s+=ch[j]*ch[j]; rms[i]=Math.sqrt(s/fl); }
+  const sorted = Array.from(rms).sort((a,b)=>a-b);
+  const floor = sorted[Math.floor(n*0.1)], peak = sorted[Math.floor(n*0.95)];
+  const thr = Math.max(floor + (peak-floor)*0.18, 0.004);
+  const minGap = Math.round(0.7/0.02), segs=[]; let cur=null, quiet=0;
+  for(let i=0;i<n;i++){
+    if(rms[i]>thr){ if(!cur) cur={a:i,b:i}; cur.b=i; quiet=0; }
+    else if(cur){ if(++quiet>=minGap){ segs.push(cur); cur=null; quiet=0; } }
+  }
+  if(cur) segs.push(cur);
+  return segs.filter(s=>(s.b-s.a)>=8).map(s=>({s:Math.max(0,s.a*0.02-0.12), e:Math.min(buf.duration,(s.b+1)*0.02+0.15)}));
+}
+let curSource = null;
+function stopAudio(){ if(curSource){ try{ curSource.onended=null; curSource.stop(); }catch(e){} curSource=null; } }
+function playBuffer(buf, s, e){
+  return new Promise(res=>{
+    try{
+      const src = AC.createBufferSource(); src.buffer = buf; src.connect(AC.destination);
+      const dur = Math.max(0.05, e-s); let done=false;
+      const fin = ()=>{ if(done) return; done=true; if(curSource===src) curSource=null; res(); };
+      src.onended = fin; curSource = src; src.start(0, s, dur);
+      setTimeout(fin, dur*1000 + 400);
+    }catch(err){ res(); }
+  });
+}
+async function previewVoice(lid,k){
+  const e = voice[lid+':'+k]; if(!e || !ac()) return;
+  try{ await AC.resume(); }catch(_){}
+  stopAudio(); const buf = await decodeBlob(e.b).catch(()=>null); if(buf) playBuffer(buf, e.s, e.e);
+}
+
+/* ================= Session planning (spaced repetition, not engagement) ================= */
+const INTERVALS = [1,3,7,21];
+const st = id => sched[id] || (sched[id] = {stage:-1, due:0, seen:0, rep:0, clips:{}});
+function nextClipFor(l){
+  const s = st(l.id);
+  if(!s.seen && !Object.keys(s.clips).length) return l.clips[0];      // new ladder: MODEL first
+  return l.clips.slice().sort((a,b)=>(s.clips[a.id]||0)-(s.clips[b.id]||0))[0];
+}
+function planSession(){
+  const N = S.perSession, now = Date.now();
+  const act = LADDERS.filter(l=>S.active.includes(l.id));
+  if(!act.length) return [];
+  const review = act.filter(l=>st(l.id).seen>0 && st(l.id).due<=now).sort((a,b)=>st(a.id).due-st(b.id).due);
+  const goal = act.filter(l=>S.goal.includes(l.id) && !review.includes(l));
+  const fresh = act.filter(l=>!st(l.id).seen && !goal.includes(l) && !review.includes(l));
+  const rest = act.filter(l=>!review.includes(l) && !goal.includes(l) && !fresh.includes(l)).sort((a,b)=>st(b.id).rep-st(a.id).rep);
+  const quotas = [[review,Math.round(N*.35)],[goal,Math.round(N*.30)],[fresh,Math.round(N*.20)]];
+  const used = new Set(), out = [], tmpSeen = {};
+  const take = (l)=>{
+    const s = st(l.id), clips = l.clips.filter(c=>!used.has(c.id));
+    if(!clips.length) return false;
+    let c = (!s.seen && !tmpSeen[l.id] && !used.has(l.clips[0].id)) ? l.clips[0] : clips.sort((a,b)=>(s.clips[a.id]||0)-(s.clips[b.id]||0))[0];
+    used.add(c.id); tmpSeen[l.id]=1; out.push({clip:c, lad:l}); return true;
+  };
+  let carry = 0;
+  for(const [bucket,q] of quotas){
+    let want = q + carry, got = 0, guard = 0, i = 0;
+    while(got<want && bucket.length && guard++<60){ if(take(bucket[i++ % bucket.length])) got++; else if(bucket.every(l=>l.clips.every(c=>used.has(c.id)))) break; }
+    carry = want - got;
+  }
+  const all = [...review, ...goal, ...fresh, ...rest]; let guard=0;
+  while(out.length<N && guard++<200){ const l = all[guard % all.length]; if(!take(l) && all.every(x=>x.clips.every(c=>used.has(c.id)))) break; }
+  // at least ~15% interactive clips
+  const needI = Math.round(N*.15);
+  let haveI = out.filter(o=>INTERACTIVE.includes(o.clip.type)).length;
+  for(const l of act){ if(haveI>=needI) break; const c = l.clips.find(c=>INTERACTIVE.includes(c.type) && !used.has(c.id));
+    if(c){ const i = out.findIndex(o=>o.clip.type!=='MODEL' && !INTERACTIVE.includes(o.clip.type)); if(i>=0){ used.delete(out[i].clip.id); out[i]={clip:c,lad:l}; used.add(c.id); haveI++; } } }
+  // MODEL before other clips of the same ladder; never the same ladder twice in a row
+  out.sort((a,b)=> a.lad===b.lad ? (a.clip.type==='MODEL'?-1:b.clip.type==='MODEL'?1:0) : 0);
+  for(let i=1;i<out.length;i++){ if(out[i].lad===out[i-1].lad){ const j = out.findIndex((o,k)=>k>i && o.lad!==out[i].lad && (k+1>=out.length || out[k+1].lad!==out[i-1].lad)); if(j>0){ const t=out[i]; out[i]=out[j]; out[j]=t; } } }
+  return out.slice(0,N);
+}
+
+/* ================= Screens ================= */
+const $ = s => document.querySelector(s);
+const screens = ['#scr-start','#scr-coview','#player','#scr-end','#scr-gate','#parent'];
+function show(id){ screens.forEach(s=>{ $(s).hidden = (s!==id); }); window.scrollTo(0,0); }
+
+const urlCache = new Map();
+async function mediaURL(key){
+  const id = media[key]; if(!id) return null;
+  if(urlCache.has(id)) return urlCache.get(id);
+  const b = await blobs.get(id); if(!b) return null;
+  const u = URL.createObjectURL(b); urlCache.set(id,u); return u;
+}
+async function paintAvatar(el){
+  const u = await mediaURL('photo'); const name = S.name.trim();
+  el.innerHTML = u ? '<img alt="" src="'+u+'">' : esc(name ? name[0] : '☺');
+}
+async function renderStart(){
+  const name = S.name.trim();
+  $('#start-name').textContent = name || 'اسم الطفل';
+  await paintAvatar($('#start-avatar'));
+  const done = (log.days[today()]||0) >= S.perDay;
+  $('#start-btn').hidden = done; $('#start-rest').hidden = !done;
+  const anyVoice = Object.keys(voice).length>0;
+  $('#start-note').hidden = !!(name && anyVoice);
+  show('#scr-start');
+}
+
+/* ---------- Player ---------- */
+let plan = [], idx = 0, token = 0, phase = 'idle', holding = false, choiceResolve = null, completedInSession = 0, wakeLock = null;
+const cap = (main, sub, cls) => { const m=$('#cap-main'); m.innerHTML = main; m.className = cls||''; $('#cap-sub').innerHTML = sub||''; };
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+const estMs = text => 700 + text.length*95;
+
+function stepsFor(c, n){
+  const up = Math.min(n+1,4), Ln='L'+n, Lu='L'+up;
+  switch(c.type){
+    case 'MODEL':   return [{k:Ln},{gap:1000},{k:Ln},{gap:1500},{k:Lu}];
+    case 'IMITATE': return [{g:'SAY'},{gap:250},{k:Ln},{pause:5,expect:Ln},{k:Ln}];
+    case 'COMPLETE':return [{k:'S'+n},{pause:4,expect:Ln},{k:Ln},{gap:800},{k:Lu}];
+    case 'ANSWER':  return [{k:'Q'},{pause:6,expect:Ln},{k:Ln},{gap:800},{k:Lu}];
+    case 'ADD':     { const s=[]; for(let i=1;i<=up;i++){ s.push({k:'L'+i}); if(i<up) s.push({gap:1500}); } s.push({pause:5,expect:Lu}); s.push({k:Lu}); return s; }
+    case 'TEMPT':   return [{gap:2500},{pause:6,expect:Ln},{k:Ln},{gap:800},{k:Lu}];
+    case 'CHOOSE':  return [{k:'CQ'},{choice:6}];
+    case 'FIND':    return [{k:'FQ'},{choice:6}];
+    case 'STORY':   return [{k:'N1'},{gap:900},{k:'N2'},{gap:900},{k:'N3'},{gap:1200},{k:'Q'},{pause:6,expect:Ln},{k:Ln},{gap:800},{k:Lu}];
+  }
+  return [];
+}
+function neededKeys(l, n){
+  const keys = new Set();
+  l.clips.forEach(c=>stepsFor(c,n).forEach(s=>{ if(s.k) keys.add(s.k); }));
+  l.clips.forEach(c=>{ if(c.type==='CHOOSE'){ keys.add('L'+n); keys.add('B'+n); } if(c.type==='FIND'){ keys.add('FA'); } });
+  return ORDER.filter(k=>keys.has(k) && l.t[k]!==undefined);
+}
+function pauseSecs(base){ return Math.min(7, Math.max(4, base + S.pauseAdj)); }
+
+async function saySeg(lid, k, my){
+  const text = tx(lineOf(lid,k));
+  const e = voiceEntry(lid,k);
+  let buf = null;
+  if(e) buf = await decodeBlob(e.b).catch(()=>null);
+  if(my!==token) return;
+  cap(esc(text), buf ? '' : '<span class="nov">من غير صوت متسجّل</span>');
+  if(buf) await playBuffer(buf, e.s, e.e); else await sleep(estMs(text));
+}
+function setRing(frac){ $('#cue .ring').setAttribute('stroke-dashoffset', String(364.4*(1-frac))); }
+function turnPause(secs, expectText, my){
+  return new Promise(res=>{
+    const P = $('#player'); P.classList.add('turn'); $('#cue').classList.remove('ack','held');
+    cap(esc(expectText), 'دوره… استنى', 'expect');
+    phase = 'pause'; let left = secs*1000, last = performance.now();
+    setRing(1);
+    const tick = (t)=>{
+      if(my!==token){ P.classList.remove('turn'); return res(false); }
+      const dt = t-last; last = t;
+      $('#cue').classList.toggle('held', holding);
+      if(!holding) left -= dt;
+      setRing(Math.max(0,left)/(secs*1000));
+      if(left<=0){ $('#cue').classList.add('ack'); setTimeout(()=>{ P.classList.remove('turn'); }, 500); phase='play'; return res(true); }
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
+}
+function waitChoice(secs, my){
+  return new Promise(res=>{
+    const P = $('#player'); P.classList.add('turn'); $('#cue').classList.remove('ack','held');
+    phase = 'choice'; let left = secs*1000, last = performance.now(), settled=false;
+    choiceResolve = (i)=>{ if(settled) return; settled=true; choiceResolve=null; P.classList.remove('turn'); phase='play'; res(i); };
+    const tick = (t)=>{
+      if(settled) return;
+      if(my!==token){ settled=true; choiceResolve=null; P.classList.remove('turn'); return res(null); }
+      const dt=t-last; last=t; $('#cue').classList.toggle('held', holding); if(!holding) left-=dt;
+      setRing(Math.max(0,left)/(secs*1000));
+      if(left<=0){ choiceResolve(-1); return; }
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
+}
+
+async function paintStage(c, l){
+  const stage = $('#stage'); stage.innerHTML = '';
+  if(c.opts){
+    const wrap = document.createElement('div'); wrap.className='opts';
+    for(let i=0;i<2;i++){
+      const u = await mediaURL('img:'+c.id+':'+i);
+      const d = document.createElement('div'); d.className='opt'; d.dataset.opt=i;
+      d.innerHTML = u ? '<img alt="'+esc(c.opts[i])+'" src="'+u+'">' : esc(c.opts[i]);
+      wrap.appendChild(d);
+    }
+    stage.appendChild(wrap); return null;
+  }
+  const u = await mediaURL('vid:'+c.id);
+  if(u){
+    const v = document.createElement('video'); v.src=u; v.muted=true; v.loop=true; v.playsInline=true; v.setAttribute('playsinline',''); v.preload='auto';
+    stage.appendChild(v); return v;
+  }
+  const ph = document.createElement('div'); ph.className='ph';
+  ph.innerHTML = '<span class="tag">'+c.id+' · '+TYPE_AR[c.type]+'</span><p>'+esc(c.scene)+'</p><small>مكان الفيديو. صوّره من «للأهل» ← استوديو التسجيل.</small>';
+  stage.appendChild(ph); return null;
+}
+
+async function runClip(){
+  const my = ++token; stopAudio(); holding=false;
+  const P = $('#player'); P.classList.remove('turn','done'); phase='play';
+  const {clip:c, lad:l} = plan[idx]; const n = S.level;
+  $('#progress i').style.width = (idx/plan.length*100)+'%';
+  cap('', '');
+  const v = await paintStage(c, l); if(my!==token) return;
+  const vplay = ()=>{ if(v){ v.play().catch(()=>{}); } };
+  const vpause = ()=>{ if(v) v.pause(); };
+  vplay();
+  const steps = stepsFor(c, n);
+  for(const s of steps){
+    if(my!==token) return;
+    if(s.gap){ await sleep(s.gap); continue; }
+    if(s.g){ await saySeg('G', s.g, my); continue; }
+    if(s.k){ await saySeg(l.id, s.k, my); continue; }
+    if(s.pause){ vpause(); const ok = await turnPause(pauseSecs(s.pause), tx(l.t[s.expect]), my); if(!ok) return; vplay(); await sleep(350); continue; }
+    if(s.choice){
+      const opts = [...document.querySelectorAll('#stage .opt')];
+      if(c.type==='CHOOSE'){
+        const pick = await waitChoice(pauseSecs(s.choice), my); if(pick===null) return;
+        const i = pick<0 ? 0 : pick;
+        opts.forEach((o,k)=>{ o.classList.toggle('sel',k===i); o.classList.toggle('dim',k!==i); });
+        await saySeg(l.id, (i===0?'L':'B')+n, my);
+      } else {
+        let pick = await waitChoice(pauseSecs(s.choice), my); if(pick===null) return;
+        if(pick!==c.correct){
+          if(pick>=0){ opts[pick].classList.add('dim'); await sleep(500); opts[pick].classList.remove('dim'); }
+          await saySeg(l.id,'FQ',my); if(my!==token) return;
+          pick = await waitChoice(pauseSecs(s.choice), my); if(pick===null) return;
+        }
+        opts.forEach((o,k)=>{ o.classList.toggle('sel',k===c.correct); o.classList.toggle('dim',k!==c.correct); });
+        await saySeg(l.id,'FA',my);
+      }
+    }
+  }
+  if(my!==token) return;
+  vpause(); phase='done'; P.classList.add('done');
+  cap(esc(tx(l.t['L'+n])), '');
+  // log the completed clip
+  const s = st(l.id); s.clips[c.id] = Date.now();
+  log.plays.push({t:Date.now(), c:c.id, l:l.id}); if(log.plays.length>3000) log.plays.splice(0, log.plays.length-3000);
+  completedInSession++; save();
+}
+
+function nextClip(){ if(phase!=='done') return; if(idx < plan.length-1){ idx++; runClip(); } else endSession(true); }
+function prevClip(){ if(phase==='pause' || phase==='choice' || idx===0) return; idx--; runClip(); }
+function replay(){ if(phase!=='done') return; const l = plan[idx].lad; st(l.id).rep++; save(); runClip(); }
+
+async function startSession(){
+  if((log.days[today()]||0) >= S.perDay){ renderStart(); return; }
+  plan = planSession();
+  if(!plan.length){ renderStart(); return; }
+  idx = 0; completedInSession = 0;
+  try{ ac() && await AC.resume(); }catch(e){}
+  // decode all needed audio up front so the pause timing is exact
+  const need = new Set();
+  plan.forEach(({lad})=>{ neededKeys(lad, S.level).forEach(k=>{ const e=voiceEntry(lad.id,k); if(e) need.add(e.b); }); });
+  const se = voiceEntry('G','SAY'); if(se) need.add(se.b);
+  await Promise.all([...need].map(b=>decodeBlob(b).catch(()=>null)));
+  const sit = pron('اقعد جنب ','اقعد جنب ') + (S.name.trim() || pron('الطفل','الطفلة')) + '.';
+  $('#cv-sit').textContent = sit;
+  $('#cv-go').textContent = 'أنا قاعد ' + pron('جنبه','جنبها') + '، يلا';
+  show('#scr-coview');
+}
+async function beginPlayer(){
+  try{ document.documentElement.requestFullscreen && await document.documentElement.requestFullscreen({navigationUI:'hide'}); }catch(e){}
+  try{ wakeLock = navigator.wakeLock ? await navigator.wakeLock.request('screen') : null; }catch(e){ wakeLock=null; }
+  const cueFace = $('#cue .face'); const u = await mediaURL('photo');
+  cueFace.innerHTML = u ? '<img alt="" src="'+u+'">' : esc(S.name.trim() ? S.name.trim()[0] : '☺');
+  show('#player'); runClip();
+}
+function endSession(finished){
+  token++; stopAudio(); phase='idle';
+  try{ wakeLock && wakeLock.release(); }catch(e){} wakeLock=null;
+  try{ document.fullscreenElement && document.exitFullscreen(); }catch(e){}
+  if(completedInSession>0){
+    log.days[today()] = (log.days[today()]||0) + 1;
+    const now = Date.now(), seenL = new Set(plan.slice(0, finished?plan.length:idx+1).map(p=>p.lad));
+    seenL.forEach(l=>{ const s=st(l.id); if(s.lastDay!==today()){ s.stage=Math.min(s.stage+1,3); s.due = now + INTERVALS[s.stage]*DAY; s.lastDay=today(); } s.seen++; });
+    save();
+  }
+  if(!finished || completedInSession===0){ renderStart(); return; }
+  const lads = [...new Set(plan.map(p=>p.lad))];
+  $('#end-lines').innerHTML = lads.slice(0,3).map(l=>'<li>'+esc(tx(l.t['L'+Math.min(S.level+1,4)]))+'</li>').join('');
+  const pickAct = (S.goal.map(byId).find(l=>l && lads.includes(l)) || lads[0]);
+  $('#end-act').textContent = pickAct.act;
+  paintAvatar($('#end-avatar'));
+  show('#scr-end');
+}
+
+/* ---------- Gestures on the player ---------- */
+(function(){
+  const P = $('#player'); let y0=0, t0=0, active=false;
+  P.addEventListener('pointerdown', e=>{
+    if(e.target.closest('#exit')) return;
+    active=true; y0=e.clientY; t0=performance.now();
+    if(phase==='pause' || phase==='choice') holding = true;
+  });
+  const up = e=>{
+    if(!active) return; active=false; holding=false;
+    const dy = y0 - e.clientY, dt = performance.now()-t0;
+    if(Math.abs(dy)>60){ dy>0 ? nextClip() : prevClip(); return; }
+    if(dt<350){
+      if(phase==='choice'){ const o = e.target.closest('.opt'); if(o && choiceResolve) choiceResolve(+o.dataset.opt); return; }
+      replay();
+    }
+  };
+  P.addEventListener('pointerup', up);
+  P.addEventListener('pointercancel', ()=>{ active=false; holding=false; });
+  document.addEventListener('keydown', e=>{
+    if($('#player').hidden) return;
+    if(e.key==='ArrowUp') nextClip(); else if(e.key==='ArrowDown') prevClip(); else if(e.key===' ') { e.preventDefault(); replay(); }
+  });
+  // long press (2 s) on the exit button
+  const X = $('#exit'); let xt=null;
+  X.addEventListener('pointerdown', e=>{ e.stopPropagation(); X.classList.add('holding'); xt = setTimeout(()=>{ X.classList.remove('holding'); endSession(false); }, 2000); });
+  const cancelX = ()=>{ clearTimeout(xt); X.classList.remove('holding'); };
+  X.addEventListener('pointerup', cancelX); X.addEventListener('pointerleave', cancelX); X.addEventListener('pointercancel', cancelX);
+  X.addEventListener('click', e=>e.preventDefault());
+  document.addEventListener('visibilitychange', ()=>{
+    if($('#player').hidden) return;
+    if(document.hidden){ token++; stopAudio(); } else { if(phase!=='idle') runClip(); }
+  });
+})();
+
+/* ---------- Gate ---------- */
+let gateTarget = 7;
+function renderGate(){
+  gateTarget = 1 + Math.floor(Math.random()*9);
+  $('#gate-word').textContent = NUMS[gateTarget-1];
+  const ks = [1,2,3,4,5,6,7,8,9].sort(()=>Math.random()-.5);
+  $('#gate-keys').innerHTML = ks.map(k=>'<button type="button" data-k="'+k+'">'+AR_DIG(k)+'</button>').join('');
+  show('#scr-gate');
+}
+$('#gate-keys').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; if(+b.dataset.k===gateTarget){ openParent('setup'); } else renderGate(); });
+$('#gate-back').addEventListener('click', renderStart);
+$('#to-gate').addEventListener('click', renderGate);
+$('#start-btn').addEventListener('click', startSession);
+$('#cv-go').addEventListener('click', beginPlayer);
+$('#end-home').addEventListener('click', renderStart);
+
+/* ================= Parent mode ================= */
+let tab = 'setup'; const msgs = {}; let confirmWipe = false; let showAll = {};
+function openParent(t){ tab=t||tab; show('#parent'); renderParent(); }
+$('#p-exit').addEventListener('click', renderStart);
+$('#tabs').addEventListener('click', e=>{ const b=e.target.closest('[data-tab]'); if(!b) return; tab=b.dataset.tab; renderParent(); });
+
+function renderParent(){
+  document.querySelectorAll('#tabs [data-tab]').forEach(b=>b.setAttribute('aria-selected', String(b.dataset.tab===tab)));
+  const body = $('#p-body');
+  body.innerHTML = ({setup:vSetup, studio:vStudio, progress:vProgress, tips:vTips, privacy:vPrivacy})[tab]();
+  if(tab==='setup') paintAvatar(document.getElementById('set-avatar'));
+}
+const seg = (name, val, opts) => '<div class="seg" data-seg="'+name+'">'+opts.map(([v,t])=>'<button type="button" data-v="'+v+'" aria-pressed="'+(String(val)===String(v))+'">'+t+'</button>').join('')+'</div>';
+
+function vSetup(){
+  const lad = l => '<b style="font-family:var(--display);font-weight:600">'+esc(tx(l.t.L2))+'</b> <span class="muted small">'+l.id+'</span>';
+  return '<div class="panel">'+
+  '<div class="box"><h2>الطفل</h2><div class="grid2" style="align-items:center">'+
+    '<div class="field"><label for="set-name">الاسم</label><input type="text" id="set-name" value="'+esc(S.name)+'" placeholder="اكتب اسم الطفل"></div>'+
+    '<div class="field"><label>ولد ولا بنت؟</label>'+seg('gender',S.gender,[['m','ولد'],['f','بنت']])+'<span class="muted small">بيغيّر «عايز / عايزة» في الجمل.</span></div>'+
+    '<div style="display:flex;gap:12px;align-items:center"><div class="avatar" id="set-avatar" style="width:72px;border-width:2px;font-size:32px;background:var(--surface-2);color:var(--ink);border-color:var(--line)"></div>'+
+    '<div class="acts"><label class="btn small">صوّر<input type="file" accept="image/*" capture="user" data-act="photo"></label><label class="btn small">اختار صورة<input type="file" accept="image/*" data-act="photo"></label></div></div>'+
+  '</div></div>'+
+  '<div class="box"><h2>المستوى الحالي</h2><p class="muted small" style="margin:0 0 8px">الأبلكيشن بيقول جملة مستوى الطفل، وبعدها جملة أعلى بخطوة واحدة بس.</p>'+
+    seg('level',S.level,[[1,'١ · كلمة'],[2,'٢ · كلمتين'],[3,'٣ · تلات كلمات'],[4,'٤ · جملة قصيرة']])+
+    '<p class="small" style="margin:8px 0 0">مثال: «'+esc(tx(LADDERS[0].t['L'+S.level]))+'» ← «'+esc(tx(LADDERS[0].t['L'+Math.min(S.level+1,4)]))+'»</p></div>'+
+  '<div class="box"><h2>الجلسة</h2><div class="grid2">'+
+    '<div class="field"><label>عدد الـ clips في الجلسة</label>'+seg('perSession',S.perSession,[[6,'٦'],[9,'٩'],[12,'١٢'],[15,'١٥']])+'</div>'+
+    '<div class="field"><label>جلسات في اليوم</label>'+seg('perDay',S.perDay,[[1,'١'],[2,'٢'],[3,'٣']])+'</div>'+
+    '<div class="field"><label>طول السكوت (دوره)</label>'+seg('pauseAdj',S.pauseAdj,[[-1,'أقصر'],[0,'عادي'],[1,'أطول']])+'<span class="muted small">عادي = ٤ لـ ٦ ثواني حسب نوع الـ clip. وممكن تمد السكوت وإنت ضاغط على الشاشة.</span></div>'+
+  '</div></div>'+
+  '<div class="box"><h2>هدف الأسبوع</h2><p class="muted small" style="margin:0 0 8px">الجمل دي بتيجي أكتر في الجلسات، بعد المراجعة.</p><div class="chips">'+
+    LADDERS.map(l=>'<button type="button" class="chip" data-goal="'+l.id+'" aria-pressed="'+S.goal.includes(l.id)+'">'+lad(l)+'</button>').join('')+'</div></div>'+
+  '<div class="box"><h2>الـ ladders الشغالة</h2><div class="chips">'+
+    LADDERS.map(l=>'<button type="button" class="chip" data-active="'+l.id+'" aria-pressed="'+S.active.includes(l.id)+'">'+lad(l)+'</button>').join('')+'</div></div>'+
+  '<div class="box proto"><h2>أدوات التجربة</h2><p class="muted small" style="margin:0 0 8px">موجودة في النسخة التجريبية بس.</p><div class="acts">'+
+    '<button type="button" class="btn small" data-act="reset-today">صفّر جلسات النهارده ('+AR_DIG(log.days[today()]||0)+' من '+AR_DIG(S.perDay)+')</button>'+
+    '<button type="button" class="btn small danger" data-act="wipe">'+(confirmWipe?'متأكد؟ اضغط تاني للمسح':'امسح كل البيانات')+'</button></div></div>'+
+  '</div>';
+}
+
+function lineRow(lid, k, text){
+  const e = voice[lid+':'+k]; const valid = voiceEntry(lid,k);
+  const status = valid ? '<span class="pill ok">متسجّل</span>' : (e ? '<span class="pill miss">متسجّل للنوع التاني</span>' : '<span class="pill miss">ناقص</span>');
+  const kLabel = KEY_AR[k] || (k[0]==='L' ? 'م'+AR_DIG(k.slice(1)) : k[0]==='B' ? 'بديل '+AR_DIG(k.slice(1)) : k[0]==='S' ? 'بداية '+AR_DIG(k.slice(1)) : k);
+  return '<div class="row"><span class="k">'+kLabel+'</span><span class="txt">'+esc(text)+'</span>'+status+
+    '<span class="acts">'+
+    (e?'<button type="button" class="btn small" data-act="play" data-l="'+lid+'" data-k="'+k+'">▶</button>':'')+
+    '<label class="btn small">سجّل<input type="file" accept="audio/*" capture data-act="rec-line" data-l="'+lid+'" data-k="'+k+'"></label>'+
+    '<label class="btn small">ملف<input type="file" accept="audio/*" data-act="rec-line" data-l="'+lid+'" data-k="'+k+'"></label>'+
+    (e?'<button type="button" class="btn small" data-act="del-line" data-l="'+lid+'" data-k="'+k+'" aria-label="امسح">✕</button>':'')+
+    '</span></div>';
+}
+function vStudio(){
+  const n = S.level;
+  const gOk = voiceEntry('G','SAY');
+  let h = '<div class="panel"><div class="box"><h2>إزاي تسجّل</h2><ol class="small" style="margin:6px 0 0;padding-inline-start:20px">'+
+    '<li>افتح أي ladder تحت. هتلاقي الجمل اللي محتاجها لمستوى '+AR_DIG(n)+' بس.</li>'+
+    '<li><b>أسرع طريقة:</b> «سجّل كلهم مرة واحدة». اقرا الجمل بالترتيب، وسيب <b>ثانيتين سكوت</b> بين كل جملة والتانية. الأبلكيشن هيقسّمهم لوحده.</li>'+
+    '<li>أو سجّل كل جملة لوحدها بزرار «سجّل».</li>'+
+    '<li>اتكلم بالراحة وبصوتك العادي، زي ما بتكلّم '+pron('ابنك','بنتك')+' في البيت.</li>'+
+    '<li>صوّر فيديو لكل clip من الكاميرا الورا، بالطول. الشرح مكتوب تحت كل clip.</li></ol>'+
+    '<p class="muted small" style="margin:8px 0 0">كل التسجيلات والفيديوهات بتفضل على الموبايل ده بس. مفيش حاجة بتترفع.</p></div>';
+  h += '<details class="lad"><summary><span class="lad-title"><b>جمل عامة</b></span>'+(gOk?'<span class="pill ok">كامل</span>':'<span class="pill miss">ناقص ١</span>')+'</summary><div class="lad-body"><div class="rows">'+lineRow('G','SAY',tx(G.t.SAY))+'</div></div></details>';
+  LADDERS.forEach(l=>{
+    const keys = showAll[l.id] ? ORDER.filter(k=>l.t[k]!==undefined) : neededKeys(l, n);
+    const need = neededKeys(l,n); const missing = need.filter(k=>!voiceEntry(l.id,k)).length;
+    const vids = l.clips.filter(c=> c.opts ? (media['img:'+c.id+':0'] && media['img:'+c.id+':1']) : media['vid:'+c.id]).length;
+    h += '<details class="lad"'+(msgs[l.id]?' open':'')+'><summary><span class="lad-title"><code>'+l.id+'</code><b>'+esc(tx(l.t.L2))+'</b></span>'+
+      '<span class="acts"><span class="pill '+(missing?'miss':'ok')+'">'+(missing?'ناقص '+AR_DIG(missing)+' جمل':'الصوت كامل')+'</span><span class="pill '+(vids===l.clips.length?'ok':'')+'">فيديو '+AR_DIG(vids)+'/'+AR_DIG(l.clips.length)+'</span></span></summary><div class="lad-body">';
+    h += '<div><h3>الجمل</h3><div class="acts" style="margin:6px 0">'+
+      '<label class="btn small primary">سجّل كلهم مرة واحدة<input type="file" accept="audio/*" capture data-act="rec-all" data-l="'+l.id+'"></label>'+
+      '<label class="btn small">ملف واحد لكلهم<input type="file" accept="audio/*" data-act="rec-all" data-l="'+l.id+'"></label>'+
+      '<button type="button" class="btn small" data-act="toggle-all" data-l="'+l.id+'">'+(showAll[l.id]?'الجمل المطلوبة بس':'كل المستويات')+'</button></div>'+
+      (msgs[l.id]&&msgs[l.id].t?'<div class="msg '+msgs[l.id].c+'">'+msgs[l.id].t+'</div>':'')+
+      '<p class="muted small" style="margin:4px 0">ترتيب القراية لو هتسجّل مرة واحدة: '+need.map(k=>'«'+esc(tx(l.t[k]))+'»').join(' ← ')+'</p>'+
+      '<div class="rows">'+keys.map(k=>lineRow(l.id,k,tx(l.t[k]))).join('')+'</div></div>';
+    h += '<div><h3>الـ clips</h3><div class="rows" style="margin-top:6px">'+l.clips.map(c=>{
+      if(c.opts){
+        return '<div class="row"><span class="k">'+TYPE_AR[c.type]+'</span><span class="txt">'+esc(c.scene)+'</span><span class="acts">'+
+          c.opts.map((o,i)=>{ const has = media['img:'+c.id+':'+i];
+            return '<label class="btn small">'+(has?'✓ ':'')+'صورة «'+esc(o)+'»<input type="file" accept="image/*" data-act="img" data-c="'+c.id+'" data-i="'+i+'"></label>'; }).join('')+'</span></div>';
+      }
+      const has = media['vid:'+c.id];
+      return '<div class="row"><span class="k">'+TYPE_AR[c.type]+'</span><span class="txt">'+esc(c.scene)+'</span>'+
+        (has?'<span class="pill ok">فيه فيديو</span>':'<span class="pill">مفيش فيديو</span>')+'<span class="acts">'+
+        (has?'<button type="button" class="btn small" data-act="view-vid" data-c="'+c.id+'">▶</button>':'')+
+        '<label class="btn small">صوّر<input type="file" accept="video/*" capture="environment" data-act="vid" data-c="'+c.id+'"></label>'+
+        '<label class="btn small">ملف<input type="file" accept="video/*" data-act="vid" data-c="'+c.id+'"></label>'+
+        (has?'<button type="button" class="btn small" data-act="del-vid" data-c="'+c.id+'" aria-label="امسح">✕</button>':'')+'</span></div>';
+    }).join('')+'</div></div>';
+    h += '</div></details>';
+  });
+  return h+'</div>';
+}
+
+function vProgress(){
+  const weekAgo = Date.now()-7*DAY;
+  const wk = log.plays.filter(p=>p.t>=weekAgo);
+  const ladsWk = new Set(wk.map(p=>p.l));
+  const homeAll = Object.keys(log.home).length, homeWk = Object.values(log.home).filter(t=>t>=weekAgo).length;
+  const reps = LADDERS.map(l=>[l,(sched[l.id]||{}).rep||0]).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  let h = '<div class="panel">'+
+   '<div class="box"><h2>أهم رقم: قالها في البيت</h2><div class="stat"><b>'+AR_DIG(homeAll)+'</b><span class="muted">جملة لحد دلوقتي · '+AR_DIG(homeWk)+' الأسبوع ده</span></div>'+
+   '<p class="muted small" style="margin:6px 0 0">اضغط «قالها» لما '+pron('يقول','تقول')+' الجملة لوحد'+pron('ه','ها')+' في البيت، من غير ما حد يطلب منه'+pron('','ا')+' يقولها.</p></div>'+
+   '<div class="box"><h2>الأسبوع ده</h2><div class="grid2">'+
+     '<div class="stat"><b>'+AR_DIG(wk.length)+'</b><span class="muted">clip خلص للآخر</span></div>'+
+     '<div class="stat"><b>'+AR_DIG(ladsWk.size)+'</b><span class="muted">ladder اتمرّن عليه</span></div></div>'+
+     '<p class="small" style="margin:8px 0 0">أكتر حاجات اتعادت: '+(reps.length?reps.map(([l,r])=>'«'+esc(tx(l.t.L2))+'» ('+AR_DIG(r)+')').join('، '):'لسه مفيش')+'</p></div>';
+  LADDERS.forEach(l=>{
+    h += '<div class="box"><h3 style="margin-bottom:6px"><code class="muted small">'+l.id+'</code> '+esc(tx(l.t.L2))+'</h3>';
+    for(let i=1;i<=4;i++){ const key=l.id+':L'+i, t=log.home[key];
+      h += '<div class="home-row"><span>'+esc(tx(l.t['L'+i]))+'</span>'+(t?'<button type="button" class="btn small" data-act="home" data-key="'+key+'"><span class="pill ok">قالها '+new Date(t).toLocaleDateString('ar-EG',{day:'numeric',month:'short'})+'</span></button>':'<button type="button" class="btn small" data-act="home" data-key="'+key+'">قالها في البيت</button>')+'</div>'; }
+    h += '</div>';
+  });
+  return h+'</div>';
+}
+function vTips(){
+  const t = [
+    ['اقعد جنبه.','الشاشة بداية، والكلام الحقيقي بيحصل بينكم.'],
+    ['استنى ٥ ثواني.','عدّ في سرك لحد خمسة قبل ما تتكلم. السكوت ده هو اللي بيدّيله فرصة.'],
+    ['زوّد كلمة واحدة بس.','لو قال «كورة»، قول «كورة حمرا». مش «دي كورة حمرا كبيرة أوي».'],
+    ['قول الصح، ما تصححش.','لو قال «مي»، قول «أيوه، مية». من غير «لأ، قول…».'],
+    ['ما تمتحنوش.','قلّل «قول كذا» و«ده إيه؟». زوّد إنك توصف اللي بيحصل.'],
+    ['امشي ورا اهتمامه.','اتكلم عن الحاجة اللي هو باصص لها دلوقتي.'],
+    ['كرّر نفس الجمل في نفس المواقف.','الأكل واللبس والحمام والنوم، كل يوم.'],
+    ['أي محاولة بتحسب.','ابتسم ورد عليه، حتى لو الكلمة مش كاملة.']
+  ];
+  return '<div class="panel"><div class="box"><ol class="tips">'+t.map(([a,b])=>'<li><b>'+a+'</b>'+b+'</li>').join('')+'</ol></div>'+
+    '<div class="box"><p style="margin:0">الأبلكيشن ده أداة تعليمية. مش بيشخّص ولا بيعالج. لو قلقان على كلام طفلك، اعرضه على أخصائي تخاطب.</p></div></div>';
+}
+function vPrivacy(){
+  return '<div class="panel"><div class="box"><h2>بياناتك فين؟</h2><ul style="margin:6px 0 0;padding-inline-start:20px">'+
+    '<li>الاسم والصورة والتسجيلات والفيديوهات بتتحفظ <b>على الموبايل ده بس</b>، جوه المتصفح.</li>'+
+    '<li>مفيش أي حاجة بتترفع على إنترنت. مفيش إعلانات ولا tracking.</li>'+
+    '<li>الأبلكيشن مش بيسمع الطفل ومش بيفتح المايك. أنت اللي بتسجّل صوتك من برنامج التسجيل.</li>'+
+    '<li>لو مسحت بيانات المتصفح، كل حاجة هتتمسح. دي نسخة تجريبية، فما تعتمدش عليها كأرشيف.</li></ul></div></div>';
+}
+
+/* ---------- Parent actions ---------- */
+function setMsg(lid, t, c){ msgs[lid] = {t, c}; }
+async function storeBlob(prefix, file){ const id = prefix+'_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); await blobs.put(id, file); return id; }
+function gcBlob(id){ if(!id) return; const used = Object.values(voice).some(v=>v.b===id) || Object.values(media).includes(id); if(!used){ blobs.del(id); bufCache.delete(id); if(urlCache.has(id)){ URL.revokeObjectURL(urlCache.get(id)); urlCache.delete(id); } } }
+async function decodeFile(file){
+  if(!ac()) throw new Error('noaudio');
+  const ab = await file.arrayBuffer();
+  return await new Promise((res,rej)=>{ const p = AC.decodeAudioData(ab, res, rej); if(p && p.then) p.then(res,rej); });
+}
+
+document.addEventListener('click', async e=>{
+  const b = e.target.closest('button'); if(!b || $('#parent').hidden) return;
+  const segEl = b.closest('[data-seg]');
+  if(segEl){ const k=segEl.dataset.seg, v=b.dataset.v; S[k] = (k==='gender') ? v : Number(v); save(); renderParent(); return; }
+  if(b.dataset.goal){ const id=b.dataset.goal; S.goal = S.goal.includes(id) ? S.goal.filter(x=>x!==id) : [...S.goal, id]; save(); renderParent(); return; }
+  if(b.dataset.active){ const id=b.dataset.active; const next = S.active.includes(id) ? S.active.filter(x=>x!==id) : [...S.active, id]; if(next.length){ S.active=next; save(); } renderParent(); return; }
+  const act = b.dataset.act;
+  if(act==='play'){ previewVoice(b.dataset.l, b.dataset.k); }
+  if(act==='del-line'){ const key=b.dataset.l+':'+b.dataset.k, old=voice[key]; delete voice[key]; save(); gcBlob(old&&old.b); renderParent(); }
+  if(act==='toggle-all'){ showAll[b.dataset.l] = !showAll[b.dataset.l]; msgs[b.dataset.l] = msgs[b.dataset.l] || {t:'',c:''}; renderParent(); }
+  if(act==='view-vid'){ const u = await mediaURL('vid:'+b.dataset.c); if(u) modal('<video src="'+u+'" controls playsinline autoplay></video>'); }
+  if(act==='del-vid'){ const k='vid:'+b.dataset.c, old=media[k]; delete media[k]; save(); gcBlob(old); renderParent(); }
+  if(act==='home'){ const k=b.dataset.key; if(log.home[k]) delete log.home[k]; else log.home[k]=Date.now(); save(); renderParent(); }
+  if(act==='reset-today'){ log.days[today()] = 0; save(); renderParent(); }
+  if(act==='wipe'){
+    if(!confirmWipe){ confirmWipe = true; renderParent(); setTimeout(()=>{ confirmWipe=false; if(tab==='setup' && !$('#parent').hidden) renderParent(); }, 4000); return; }
+    confirmWipe=false; await blobs.clear(); try{ Object.keys(localStorage).filter(k=>k.startsWith('rwt:')).forEach(k=>localStorage.removeItem(k)); }catch(_){}
+    S = Object.assign({}, DEFAULTS); voice={}; media={}; sched={}; log={days:{},plays:[],home:{}}; bufCache.clear(); urlCache.clear(); renderParent();
+  }
+});
+document.addEventListener('change', async e=>{
+  const inp = e.target;
+  if(inp.id==='set-name'){ S.name = inp.value.slice(0,30); save(); return; }
+  const act = inp.dataset && inp.dataset.act; if(!act || !inp.files || !inp.files[0]) return;
+  const file = inp.files[0]; inp.value = '';
+  try{
+    if(act==='photo'){ const old=media.photo; media.photo = await storeBlob('p', file); save(); gcBlob(old); renderParent(); return; }
+    if(act==='vid'){ const k='vid:'+inp.dataset.c, old=media[k]; media[k] = await storeBlob('v', file); save(); gcBlob(old); renderParent(); return; }
+    if(act==='img'){ const k='img:'+inp.dataset.c+':'+inp.dataset.i, old=media[k]; media[k] = await storeBlob('i', file); save(); gcBlob(old); renderParent(); return; }
+    if(act==='rec-line'){
+      const lid=inp.dataset.l, k=inp.dataset.k;
+      const buf = await decodeFile(file); const segs = detectSegments(buf);
+      const s = segs.length ? segs[0].s : 0, en = segs.length ? segs[segs.length-1].e : buf.duration;
+      const id = await storeBlob('a', file); bufCache.set(id, buf);
+      const old = voice[lid+':'+k]; voice[lid+':'+k] = {b:id, s, e:en, g:S.gender}; save(); gcBlob(old&&old.b);
+      if(lid!=='G') setMsg(lid, 'اتسجّلت: «'+esc(tx(lineOf(lid,k)))+'». اسمعها بزرار ▶.', 'good');
+      renderParent(); previewVoice(lid,k); return;
+    }
+    if(act==='rec-all'){
+      const lid=inp.dataset.l, l=byId(lid), need=neededKeys(l, S.level);
+      const buf = await decodeFile(file); const segs = detectSegments(buf);
+      if(segs.length!==need.length){
+        setMsg(lid, 'لقيت '+AR_DIG(segs.length)+' جمل، والمطلوب '+AR_DIG(need.length)+'. سجّل تاني وسيب ثانيتين سكوت كاملين بين كل جملة، أو سجّل كل جملة لوحدها.', 'bad');
+        renderParent(); return;
+      }
+      const id = await storeBlob('a', file); bufCache.set(id, buf);
+      need.forEach((k,i)=>{ const old = voice[lid+':'+k]; voice[lid+':'+k] = {b:id, s:segs[i].s, e:segs[i].e, g:S.gender}; setTimeout(()=>gcBlob(old&&old.b),0); });
+      save(); setMsg(lid, 'تمام. اتقسموا '+AR_DIG(need.length)+' جمل. اسمع كل واحدة بزرار ▶ واتأكد إنها في مكانها.', 'good'); renderParent(); return;
+    }
+  }catch(err){
+    const lid = inp.dataset.l;
+    if(lid) setMsg(lid, 'مقدرتش أقرا الملف ده. جرّب تسجّل بصيغة m4a أو mp3 من برنامج التسجيل.', 'bad');
+    renderParent();
+  }
+});
+function modal(html){
+  const m = document.createElement('div'); m.className='modal'; m.innerHTML = '<div style="text-align:center">'+html+'<div><button type="button" class="btn">اقفل</button></div></div>';
+  m.addEventListener('click', ev=>{ if(ev.target===m || ev.target.closest('.btn')) m.remove(); });
+  document.body.appendChild(m);
+}
+
+renderStart();
+})();
+</script>
