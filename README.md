@@ -14,8 +14,17 @@ A live-action, Egyptian-Arabic speech-development app for children aged 2–3.5 
 | D | [Production plan](docs/D-production-plan.md) | Crew, equipment, stock licensing, voice recording, legal, cost and calendar to the pilot; v1 forecast |
 | E | [Risks and recommended changes](docs/E-risks-and-recommended-changes.md) | The three biggest risks and ten proposed changes to the brief |
 
-## Decisions needed before the next step (shot list → clickable prototype)
+| F | [SLP review brief](docs/F-slp-review-brief.md) | What to hand the speech-language pathologist: scope, questions, sign-off gates |
 
-1. Accept or reject the changes in doc E (especially: co-viewing as the core, segment-based audio, POV filming, TEMPTATION clip type, 4–6-year-old child actors).
-2. Name the SLP advisor.
-3. Lean or recommended pilot budget (doc D §6).
+## Decision log
+
+| Date | Decision | By |
+|---|---|---|
+| 2026-09-28 | All ten changes in doc E accepted; they override the brief where they conflict. | Mahmoud |
+| 2026-09-28 | A licensed Egyptian SLP will be engaged as advisor (see doc F). | Mahmoud |
+
+## Open decisions
+
+1. **Pilot budget:** lean (≈ 56k EGP) or recommended (≈ 124k EGP). See doc D §6.
+2. **SLP sign-off on the 10 pilot ladders.** This gates voice recording and the shoot (doc F, gate 1).
+3. **Go-ahead for the clickable prototype** (brief §10, step 4). It can be built in parallel with the SLP review, using placeholder footage.

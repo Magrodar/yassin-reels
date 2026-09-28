@@ -1,6 +1,6 @@
 # (E) The Three Biggest Risks — and What I Would Change
 
-Status: **for decision.** The brief asked for direct criticism. This document gives it.
+Status: **APPROVED by Mahmoud on 2026-09-28. All ten changes are accepted and now override the original brief where they conflict.** The brief asked for direct criticism. This document gives it.
 
 ---
 
